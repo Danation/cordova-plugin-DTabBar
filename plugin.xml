@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="cordova-plugin-DTabBar" version="1.0.0">
+    <name>DTabBar</name>
+    <description>Tab Bar Plugin</description>
+    <license>MIT License</license>
+    <keywords>cordova,ios,tab,bar</keywords>
+    <js-module src="www/DTabBar.js" name="DTabBar"></js-module>
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="DTabBar">
+                <param name="ios-package" onload="true" value="DTabBar"/>
+            </feature>
+        </config-file>
+        <source-file src="src/DTabBar.swift" />
+    </platform>
+</plugin>
