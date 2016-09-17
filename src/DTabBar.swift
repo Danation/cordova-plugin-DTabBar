@@ -19,6 +19,12 @@ import WebKit
     
     private var tabBar:UITabBar = UITabBar()
     
+    private var homeUrl = ""
+    
+    override public func pluginInitialize() {
+        homeUrl = commandDelegate.settings["homeurl"] as! String;
+    }
+    
     func create(command : CDVInvokedUrlCommand) {
         statusBarHeight = 20.0
         tabBarHeight = 49.0
@@ -96,7 +102,7 @@ import WebKit
     
     public func tabBar(tabBar: UITabBar, didSelectItem item: UITabBarItem) {
         if let relativeUrl = tabItemURLs[item.title!] {
-            let newUrl = BASE_URL + relativeUrl
+            let newUrl = homeUrl + relativeUrl
             let request = NSURLRequest(URL: NSURL(string: newUrl)!)
             
             if (self.webView is UIWebView) {
