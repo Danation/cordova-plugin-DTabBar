@@ -25,6 +25,7 @@ import WebKit
         homeUrl = commandDelegate.settings["homeurl"] as! String;
     }
     
+    @objc(create:)
     func create(command : CDVInvokedUrlCommand) {
         statusBarHeight = 20.0
         tabBarHeight = 49.0
@@ -33,25 +34,25 @@ import WebKit
         tabItemURLs = Dictionary<String, String>()
         tabBar = UITabBar()
         // Add an event handler for orientation change so that the tab bar does not get "stuck"
-        NSNotificationCenter.defaultCenter().addObserver(self,
-                                                         selector: "orientationChanged:",
-                                                         name: UIDeviceOrientationDidChangeNotification,
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(DTabBar.orientationChanged),
+                                                         name: NSNotification.Name.UIDeviceOrientationDidChange,
                                                          object: nil)
         
         // Set up tab bar
         tabBar.sizeToFit()
-        tabBar.hidden = true
+        tabBar.isHidden = true
         tabBar.delegate = self
-        tabBar.multipleTouchEnabled = false
+        tabBar.isMultipleTouchEnabled = false
         tabBar.autoresizesSubviews = true
-        tabBar.userInteractionEnabled = true
-        tabBar.opaque = true
+        tabBar.isUserInteractionEnabled = true
+        tabBar.isOpaque = true
 
         // Add tab bar items
         
         if let options = command.arguments[0] as? [String: AnyObject] {
-            if let iconTint = options["iconTintColor"] as? String {
-                tabBar.tintColor = colorStringToColor(iconTint)
+            if let iconTint = options["iconTintColor"] as? NSString {
+                tabBar.tintColor = colorStringToColor(input: iconTint)
             }
             
             var tag = 0;
@@ -59,11 +60,12 @@ import WebKit
                 var tabBarItemArray:[UITabBarItem] = Array<UITabBarItem>()
                 for item in items {
                     // Get image
-                    if let imagePath = NSBundle.mainBundle().pathForResource(item["imageFilename"], ofType: "png") {
+                    if let imagePath = Bundle.main.path(forResource: item["imageFilename"], ofType: "png") {
                         let tabImage = UIImage(contentsOfFile: imagePath)
                         
                         // Create the tab item
-                        let tabBarItem = UITabBarItem(title: item["label"], image: tabImage, tag: tag++)
+                        let tabBarItem = UITabBarItem(title: item["label"], image: tabImage, tag: tag)
+                        tag += 1
                         tabBarItemArray.append(tabBarItem)
                         
                         // Add to lookup tables
@@ -83,13 +85,14 @@ import WebKit
         correctViewFrames()
     }
     
+    @objc(setVisible:)
     func setVisible(command : CDVInvokedUrlCommand) {
         let shouldShow = command.arguments[0] as! Bool
-        tabBar.hidden = !shouldShow
+        tabBar.isHidden = !shouldShow
         correctViewFrames()
     }
 
-    
+    @objc(selectItem:)
     func selectItem(command : CDVInvokedUrlCommand) {
         let itemName = command.arguments[0] as! String
         if let tabBarItem = tabBarItems[itemName] {
@@ -100,22 +103,22 @@ import WebKit
         }
     }
     
-    public func tabBar(tabBar: UITabBar, didSelectItem item: UITabBarItem) {
+    public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         if let relativeUrl = tabItemURLs[item.title!] {
             let newUrl = homeUrl + relativeUrl
-            let request = NSURLRequest(URL: NSURL(string: newUrl)!)
+            let request = NSURLRequest(url: NSURL(string: newUrl)! as URL)
             
             if (self.webView is UIWebView) {
-                (self.webView as! UIWebView).loadRequest(request)
+                (self.webView as! UIWebView).loadRequest(request as URLRequest)
             }
             else if (self.webView is WKWebView) {
-                (self.webView as! WKWebView).loadRequest(request)
+                (self.webView as! WKWebView).load(request as URLRequest)
             }
         }
     }
     
     func colorStringToColor(input : NSString) -> UIColor {
-        let stringComponents = input.componentsSeparatedByString(",")
+        let stringComponents = input.components(separatedBy: ",")
         
         // String to CGFloat conversion
         let cgfloatComponents = stringComponents.map {
@@ -139,7 +142,7 @@ import WebKit
     }
     
     func correctWebViewFrame() {
-        if tabBar.hidden {
+        if tabBar.isHidden {
             return;
         }
         
@@ -149,8 +152,8 @@ import WebKit
         var navBarShown:Bool = false
         let parent = tabBar.superview!
         for view:UIView in parent.subviews as Array<UIView> {
-            if view.isMemberOfClass(UINavigationBar) {
-                navBarShown = !view.hidden
+            if view is UINavigationBar {
+                navBarShown = !view.isHidden
                 navBarHeight = view.frame.height
                 break
             }
@@ -176,7 +179,7 @@ import WebKit
     
     func correctTabBarFrame() {
         
-        if tabBar.hidden {
+        if tabBar.isHidden {
             return
         }
         
@@ -187,14 +190,14 @@ import WebKit
         var bottom:CGFloat = parentSize!.origin.y + parentSize!.size.height - tabBarHeight
         
         //If orientation doesn't match dimensions, correct the dimensions.  This happens when there are two orientation changes in quick succession.
-        let orientation = UIDevice.currentDevice().orientation
+        let orientation = UIDevice.current.orientation
         
         if UIDeviceOrientationIsPortrait(orientation) {
             
             //if the dimensions indicate landscape when it's really portrait
             if right > bottom {
-                let isIpad = UIDevice.currentDevice().userInterfaceIdiom == UIUserInterfaceIdiom.Pad
-                if isIpad || (!isIpad && orientation != UIDeviceOrientation.PortraitUpsideDown) {
+                let isIpad = UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad
+                if isIpad || (!isIpad && orientation != UIDeviceOrientation.portraitUpsideDown) {
                     if portraitViewHeight != nil && portraitViewWidth != nil {
                         //Use the correctly stored dimensions
                         right = portraitViewWidth!
