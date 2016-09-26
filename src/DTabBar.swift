@@ -60,8 +60,7 @@ import WebKit
                 var tabBarItemArray:[UITabBarItem] = Array<UITabBarItem>()
                 for item in items {
                     // Get image
-                    if let imagePath = Bundle.main.path(forResource: item["imageFilename"], ofType: "png") {
-                        let tabImage = UIImage(contentsOfFile: imagePath)
+                    if let tabImage = UIImage(named: item["imageFilename"]!) {
                         
                         // Create the tab item
                         let tabBarItem = UITabBarItem(title: item["label"], image: tabImage, tag: tag)
